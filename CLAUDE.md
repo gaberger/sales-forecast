@@ -4,54 +4,54 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Sales pipeline forecasting using Monte Carlo simulation. Models uncertainty in deal outcomes to generate probability distributions of expected revenue.
+Sales pipeline forecasting using Monte Carlo simulation. Two simulation modes:
+1. **Basic**: Model deal close probability to forecast revenue distribution
+2. **Capacity**: Model SE resource constraints and POC duration impact on revenue
 
 ## Commands
 
 ```bash
-# Install package with dev dependencies
+# Install
 pip install -e ".[dev]"
 
 # Run tests
-pytest
+python -m pytest
 
-# Run tests with coverage
-pytest --cov=sales_forecast --cov-report=term-missing
-
-# Run a single test
-pytest tests/test_simulation.py::TestSimulation::test_reproducibility
-
-# Lint
+# Lint and type check
 ruff check src/ tests/
-
-# Type check
 mypy src/
 
-# Run forecast CLI
+# Basic forecast from pipeline JSON
 sales-forecast <pipeline.json> [-n simulations] [--seed N] [--json]
+
+# POC duration impact analysis
+poc-impact --poc-durations 30 90 150 300 --num-ses 10 [-n simulations]
 ```
 
 ## Architecture
 
 ```
 src/sales_forecast/
-├── models.py      # Deal and Pipeline data classes
-├── simulation.py  # Monte Carlo engine (Simulation, SimulationResult)
-└── cli.py         # Command-line interface
+├── models.py       # Deal, Pipeline dataclasses
+├── simulation.py   # Basic Monte Carlo (Simulation, SimulationResult)
+├── capacity.py     # Capacity-constrained simulation (CapacitySimulation)
+├── cli.py          # sales-forecast CLI
+└── capacity_cli.py # poc-impact CLI
 ```
 
-**Core flow**: Pipeline (list of Deals) → Simulation.run() → SimulationResult with statistics
+### Basic Simulation
+Pipeline (list of Deals) → `Simulation.run()` → revenue distribution based on close probabilities
 
-**Simulation approach**: For each iteration, randomly sample whether each deal closes based on its probability, sum closed deal values. Repeat N times to build outcome distribution.
+### Capacity Simulation
+Models SE resource constraints:
+- Opportunities arrive over time (Poisson process)
+- Each requires a POC of fixed duration
+- POCs require an available SE (queue if all busy)
+- After POC completes, deal closes with given probability
+- Tracks: revenue, deals closed, deals lost to queue, SE utilization
 
 ## Pipeline JSON Format
 
 ```json
-{
-  "deals": [
-    {"name": "Acme Corp", "value": 50000, "probability": 0.8, "days_to_close": 15}
-  ]
-}
+{"deals": [{"name": "Acme", "value": 50000, "probability": 0.8}]}
 ```
-
-Required fields: `name`, `value`, `probability`. Optional: `days_to_close` (default: 30).

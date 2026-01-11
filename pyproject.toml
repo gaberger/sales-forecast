@@ -21,6 +21,7 @@ dev = [
 
 [project.scripts]
 sales-forecast = "sales_forecast.cli:main"
+poc-impact = "sales_forecast.capacity_cli:main"
 
 [build-system]
 requires = ["setuptools>=61.0"]
