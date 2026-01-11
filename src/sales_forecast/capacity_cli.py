@@ -49,6 +49,12 @@ def main() -> None:
         help="Average deal value in dollars (default: 100000)",
     )
     parser.add_argument(
+        "--win-rate",
+        type=float,
+        default=0.30,
+        help="Win rate after POC completes, e.g., 0.54 for 54%% (default: 0.30)",
+    )
+    parser.add_argument(
         "-n",
         "--simulations",
         type=int,
@@ -76,6 +82,7 @@ def main() -> None:
         time_horizon_days=args.horizon,
         opportunities_per_year=args.opportunities,
         avg_deal_value=args.avg_deal_value,
+        win_rate=args.win_rate,
         n_simulations=args.simulations,
         seed=args.seed,
     )
@@ -88,6 +95,7 @@ def main() -> None:
                 "time_horizon_days": args.horizon,
                 "opportunities_per_year": args.opportunities,
                 "avg_deal_value": args.avg_deal_value,
+                "win_rate": args.win_rate,
                 "simulations": args.simulations,
             },
             "results": {
@@ -108,8 +116,8 @@ def main() -> None:
     else:
         print(f"POC Duration Impact Analysis ({args.simulations:,} simulations)")
         pocs_info = f" x {args.pocs_per_se} POCs each" if args.pocs_per_se > 1 else ""
-        print(f"SEs: {args.num_ses}{pocs_info} | Horizon: {args.horizon} days | "
-              f"Opportunities/year: {args.opportunities}")
+        print(f"SEs: {args.num_ses}{pocs_info} | Win Rate: {args.win_rate:.0%} | "
+              f"Opps/year: {args.opportunities}")
         print("=" * 80)
         print()
 

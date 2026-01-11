@@ -225,6 +225,7 @@ def compare_poc_durations(
     time_horizon_days: int = 365,
     opportunities_per_year: int = 100,
     avg_deal_value: float = 100000.0,
+    win_rate: float = 0.3,
     n_simulations: int = 1000,
     seed: int | None = None,
 ) -> dict[int, CapacitySimulationResult]:
@@ -237,6 +238,7 @@ def compare_poc_durations(
         time_horizon_days: Time horizon for simulation (default: 1 year)
         opportunities_per_year: Expected opportunities per year
         avg_deal_value: Average deal value
+        win_rate: Probability of closing after POC completes (default: 0.3)
         n_simulations: Number of Monte Carlo iterations
         seed: Random seed for reproducibility
 
@@ -253,6 +255,7 @@ def compare_poc_durations(
             time_horizon_days=time_horizon_days,
             opportunities_per_year=opportunities_per_year,
             avg_deal_value=avg_deal_value,
+            avg_close_probability=win_rate,
             seed=seed,
         )
         results[duration] = sim.run(n_simulations)
