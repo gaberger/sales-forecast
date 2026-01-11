@@ -99,6 +99,7 @@ class CapacitySimulation:
     poc_duration_days: int
     time_horizon_days: int = 365
     seed: int | None = None
+    pocs_per_se: int = 1  # How many concurrent POCs each SE can run
 
     # Pipeline generation parameters
     opportunities_per_year: int = 100
@@ -110,6 +111,11 @@ class CapacitySimulation:
 
     def __post_init__(self) -> None:
         self._rng = np.random.default_rng(self.seed)
+
+    @property
+    def total_poc_slots(self) -> int:
+        """Total concurrent POC capacity = SEs × POCs per SE."""
+        return self.num_ses * self.pocs_per_se
 
     def _generate_opportunities(self) -> list[Opportunity]:
         """Generate random opportunities arriving throughout the time horizon."""
@@ -145,8 +151,9 @@ class CapacitySimulation:
         if opportunities is None:
             opportunities = self._generate_opportunities()
 
-        # Track when each SE becomes available (day number)
-        se_available_day: NDArray[np.int64] = np.zeros(self.num_ses, dtype=np.int64)
+        # Track when each POC slot becomes available (day number)
+        # Total slots = num_ses * pocs_per_se
+        slot_available_day: NDArray[np.int64] = np.zeros(self.total_poc_slots, dtype=np.int64)
 
         total_revenue = 0.0
         deals_closed = 0
@@ -155,9 +162,9 @@ class CapacitySimulation:
         total_se_days_used = 0
 
         for opp in opportunities:
-            # Find earliest available SE
-            earliest_se = int(np.argmin(se_available_day))
-            earliest_available = int(se_available_day[earliest_se])
+            # Find earliest available slot
+            earliest_slot = int(np.argmin(slot_available_day))
+            earliest_available = int(slot_available_day[earliest_slot])
 
             # When can POC start?
             poc_start = max(opp.arrival_day, earliest_available)
@@ -172,8 +179,8 @@ class CapacitySimulation:
                 deals_lost += 1
                 continue
 
-            # Assign SE for the POC duration
-            se_available_day[earliest_se] = poc_end
+            # Assign slot for the POC duration
+            slot_available_day[earliest_slot] = poc_end
             total_se_days_used += self.poc_duration_days
 
             # Does the deal close?
@@ -181,8 +188,8 @@ class CapacitySimulation:
                 total_revenue += opp.value
                 deals_closed += 1
 
-        # Calculate SE utilization
-        max_se_days = self.num_ses * self.time_horizon_days
+        # Calculate SE utilization (based on total slot capacity)
+        max_se_days = self.total_poc_slots * self.time_horizon_days
         utilization = total_se_days_used / max_se_days if max_se_days > 0 else 0
 
         return CapacityResult(
@@ -214,6 +221,7 @@ class CapacitySimulation:
 def compare_poc_durations(
     poc_durations: list[int],
     num_ses: int = 10,
+    pocs_per_se: int = 1,
     time_horizon_days: int = 365,
     opportunities_per_year: int = 100,
     avg_deal_value: float = 100000.0,
@@ -225,6 +233,7 @@ def compare_poc_durations(
     Args:
         poc_durations: List of POC durations to compare (in days)
         num_ses: Number of Sales Engineers available
+        pocs_per_se: Number of concurrent POCs each SE can run
         time_horizon_days: Time horizon for simulation (default: 1 year)
         opportunities_per_year: Expected opportunities per year
         avg_deal_value: Average deal value
@@ -240,6 +249,7 @@ def compare_poc_durations(
         sim = CapacitySimulation(
             num_ses=num_ses,
             poc_duration_days=duration,
+            pocs_per_se=pocs_per_se,
             time_horizon_days=time_horizon_days,
             opportunities_per_year=opportunities_per_year,
             avg_deal_value=avg_deal_value,

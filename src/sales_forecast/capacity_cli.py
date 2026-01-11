@@ -25,6 +25,12 @@ def main() -> None:
         help="Number of Sales Engineers (default: 10)",
     )
     parser.add_argument(
+        "--pocs-per-se",
+        type=int,
+        default=1,
+        help="Concurrent POCs each SE can run (default: 1)",
+    )
+    parser.add_argument(
         "--horizon",
         type=int,
         default=365,
@@ -66,6 +72,7 @@ def main() -> None:
     results = compare_poc_durations(
         poc_durations=args.poc_durations,
         num_ses=args.num_ses,
+        pocs_per_se=args.pocs_per_se,
         time_horizon_days=args.horizon,
         opportunities_per_year=args.opportunities,
         avg_deal_value=args.avg_deal_value,
@@ -77,6 +84,7 @@ def main() -> None:
         output = {
             "parameters": {
                 "num_ses": args.num_ses,
+                "pocs_per_se": args.pocs_per_se,
                 "time_horizon_days": args.horizon,
                 "opportunities_per_year": args.opportunities,
                 "avg_deal_value": args.avg_deal_value,
@@ -99,7 +107,8 @@ def main() -> None:
         print(json.dumps(output, indent=2))
     else:
         print(f"POC Duration Impact Analysis ({args.simulations:,} simulations)")
-        print(f"SEs: {args.num_ses} | Horizon: {args.horizon} days | "
+        pocs_info = f" x {args.pocs_per_se} POCs each" if args.pocs_per_se > 1 else ""
+        print(f"SEs: {args.num_ses}{pocs_info} | Horizon: {args.horizon} days | "
               f"Opportunities/year: {args.opportunities}")
         print("=" * 80)
         print()
