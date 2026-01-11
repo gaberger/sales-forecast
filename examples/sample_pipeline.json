@@ -1,0 +1,10 @@
+{
+  "deals": [
+    {"name": "Acme Corp", "value": 50000, "probability": 0.8, "days_to_close": 15},
+    {"name": "Globex Inc", "value": 120000, "probability": 0.4, "days_to_close": 45},
+    {"name": "Initech", "value": 35000, "probability": 0.9, "days_to_close": 7},
+    {"name": "Umbrella Corp", "value": 200000, "probability": 0.2, "days_to_close": 60},
+    {"name": "Stark Industries", "value": 75000, "probability": 0.6, "days_to_close": 30},
+    {"name": "Wayne Enterprises", "value": 150000, "probability": 0.35, "days_to_close": 90}
+  ]
+}
